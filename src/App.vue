@@ -168,8 +168,8 @@ const IDA_Star = (index, len, lastMove) => {
 
     if (index + moveStep[i] >= 0
         && index + moveStep[i] <= 15
-        && (index % 4 === 0 && i !== 1)
-        && (index % 4 === 3 && i !== 2)) {
+        && !(index % 4 === 0 && i === 1)
+        && !(index % 4 === 3 && i === 2)) {
       swap(index, index + moveStep[i], data)
 
       let newCost = evaluate(data);
