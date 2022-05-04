@@ -2,11 +2,17 @@
 
 const goal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0,]
 let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0,]
+let autoMoveData = []
 
-const swap = (i, j) => {
-  let temp = data[i]
-  data[i] = data[j]
-  data[j] = temp
+let path = []
+let minLength = 0, maxLength
+let isMin = false
+let moveStep = [-4, -1, 1, 4]
+
+const swap = (i, j, list) => {
+  let temp = list[i]
+  list[i] = list[j]
+  list[j] = temp
 }
 
 const moveAnimation = (element, direction) => {
@@ -35,35 +41,45 @@ const moveAnimation = (element, direction) => {
 const move = (idx) => {
   if (idx === 0) return
 
-  let zeroIndex = data.findIndex(i => i === 0) + 1
-  let index = data.findIndex(i => i === idx) + 1
+  let zeroIndex = data.findIndex(i => i === 0)
+  let index = data.findIndex(i => i === idx)
 
   let element = document.getElementById('num' + idx)
 
   if (zeroIndex === index - 4) {
     moveAnimation(element, 0)
-    swap(zeroIndex - 1, index - 1)
-  } else if (zeroIndex === index + 1 && index % 4 !== 0) {
+    swap(zeroIndex, index, data)
+  } else if (zeroIndex === index + 1 && index % 4 !== 3) {
     moveAnimation(element, 1)
-    swap(zeroIndex - 1, index - 1)
+    swap(zeroIndex, index, data)
   } else if (zeroIndex === index + 4) {
     moveAnimation(element, 2)
-    swap(zeroIndex - 1, index - 1)
-  } else if (zeroIndex === index - 1 && index % 4 !== 1) {
+    swap(zeroIndex, index, data)
+  } else if (zeroIndex === index - 1 && index % 4 !== 0) {
     moveAnimation(element, 3)
-    swap(zeroIndex - 1, index - 1)
+    swap(zeroIndex, index, data)
   }
+
+  if (checkWin()) win()
+}
+
+const checkWin = () => {
+  for (let i = 0; i <= 15; ++i) {
+    if (data[i] !== goal[i])
+      return false
+  }
+  return true
+}
+
+const win = () => {
+  console.log('你赢了')
 }
 
 const shuffle = () => {
-  let l = data.length
-  let index, temp
-  while (l > 0) {
-    index = Math.floor(Math.random() * l)
-    temp = data[l - 1]
-    data[l - 1] = data[index]
-    data[index] = temp
-    l--
+  let time = data.length
+  while (time > 0) {
+    swap(time - 1, Math.floor(Math.random() * time), data)
+    time--
   }
 
   data.forEach((i, idx) => {
@@ -82,7 +98,7 @@ const shuffle = () => {
 }
 
 const reset = () => {
-  data = goal
+  data = goal.concat()
 
   for (let i = 0; i <= 15; ++i) {
     let element = document.getElementById('num' + i)
@@ -99,6 +115,130 @@ const reset = () => {
     else if (i <= 15) element.style.top = '432px'
   }
 }
+
+const hasSolution = (a) => {
+  const zeroIndex = data.findIndex(i => i === 0)
+  let inversion = 0
+
+  for (let i = 0; i < 16; ++i) {
+    for (let j = i + 1; j < 16; ++j) {
+      if (a[i] > a[j]) inversion++
+    }
+  }
+
+  inversion += Math.abs(zeroIndex / 4 - 3) + Math.abs(zeroIndex % 4 - 3)
+  return inversion % 2
+}
+
+const evaluate = (a) => {
+  let cost = 0
+
+  for (let i = 0; i < 16; ++i) {
+    if (data[i] === 0)
+      cost += (3 - Math.floor(i / 4)) + (3 - i % 4)
+    else if (data[i] % 4 === 0)
+      cost += Math.abs(Math.floor(data[i] / 4) - 1 - Math.floor(i / 4)) + Math.abs(3 - i % 4)
+    else
+      cost += Math.abs(Math.floor(data[i] / 4) - Math.floor(i / 4)) + Math.abs(data[i] % 4 - 1 - i % 4)
+  }
+
+  return cost
+}
+
+const IDA_Star = (index, len, lastMove) => {
+  if (isMin) return;
+  let cost = evaluate(data);
+
+  if (len === maxLength) {
+    if (cost === 0) {
+      isMin = true;
+      minLength = len;
+    }
+    return;
+  } else if (len < maxLength) {
+    if (cost === 0) {
+      isMin = true;
+      minLength = len;
+      return;
+    }
+  }
+
+  for (let i = 0; i < 4; ++i) {
+    if (i + lastMove === 3 && len > 0) continue;
+
+    if (index + moveStep[i] >= 0
+        && index + moveStep[i] <= 15
+        && (index % 4 === 0 && i !== 1)
+        && (index % 4 === 3 && i !== 2)) {
+      swap(index, index + moveStep[i], data)
+
+      let newCost = evaluate(data);
+      if (newCost + len <= maxLength && !isMin) {
+        path[len] = i;
+        IDA_Star(index + moveStep[i], len + 1, i);
+
+        if (isMin) return;
+      }
+
+      swap(index, index + moveStep[i], data)
+    }
+  }
+}
+
+const restore = () => {
+  if (checkWin()) return
+
+  if (hasSolution(data)) {
+    autoMoveData = data.concat()
+
+    maxLength = evaluate(data);
+
+    while (!isMin && minLength <= 50) {
+      IDA_Star(data.findIndex(i => i === 0), 0, 0);
+      if (!isMin) maxLength++;
+    }
+
+    if (isMin) {
+      autoMove()
+
+      minLength = 0
+      isMin = false
+    }
+  } else if (!hasSolution(data) || !isMin)
+    console.log('no answer')
+}
+
+const autoMove = () => {
+  let step = 0
+  let timer = setInterval(() => {
+    let zeroIndex = autoMoveData.findIndex(i => i === 0)
+
+    switch (path[step]) {
+      case 0: // 0要向上
+        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex - 4]), 2)
+        swap(zeroIndex, zeroIndex - 4, autoMoveData)
+        break
+      case 1: // 0要向左
+        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex - 1]), 1)
+        swap(zeroIndex, zeroIndex - 1, autoMoveData)
+        break
+      case 2: // 0要向右
+        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + 1]), 3)
+        swap(zeroIndex, zeroIndex + 1, autoMoveData)
+        break
+      case 3: // 0要向下
+        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + 4]), 0)
+        swap(zeroIndex, zeroIndex + 4, autoMoveData)
+        break
+    }
+
+    step++
+    if (step === path.length) {
+      path = []
+      clearInterval(timer)
+    }
+  }, 100)
+}
 </script>
 
 <template>
@@ -114,13 +254,11 @@ const reset = () => {
     </div>
 
     <div style="margin-top: 640px">
-
-      <button @click="shuffle">随机</button>
+      <button @click="restore">复原</button>
+      <button @click="shuffle" style="margin-left: 48px">随机</button>
       <button @click="reset" style="margin-left: 48px">重置</button>
     </div>
   </div>
-
-
 </template>
 
 <script>
@@ -198,7 +336,7 @@ export default {
 
 .number-block:hover::before {
   transform: skewX(45deg) translateX(-180px);
-  transition: transform 0.5s;
+  transition: transform 0.3s;
 }
 
 button {
@@ -210,6 +348,15 @@ button {
   cursor: pointer;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.2s;
+}
+
+button:hover {
+  box-shadow: 0 0 10px #ffffff;
+}
+
+button:active {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 #num1,
