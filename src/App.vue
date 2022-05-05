@@ -1,8 +1,11 @@
 <script setup>
+import StepBoard from "@/components/StepBoard"
+import {ref} from "vue";
 
 const goal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0,]
 let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0,]
 let autoMoveData = []
+const showStepDataList = ref([])
 
 let path = []
 let minLength = 0, maxLength
@@ -99,6 +102,7 @@ const shuffle = () => {
 
 const reset = () => {
   data = goal.concat()
+  showStepDataList.value = []
 
   for (let i = 0; i <= 15; ++i) {
     let element = document.getElementById('num' + i)
@@ -200,42 +204,47 @@ const restore = () => {
 
     if (isMin) {
       autoMove()
-
-      minLength = 0
-      isMin = false
     }
   } else if (!hasSolution(data) || !isMin)
     console.log('no answer')
 }
 
 const autoMove = () => {
+  showStepDataList.value = []
   let step = 0
   let timer = setInterval(() => {
     let zeroIndex = autoMoveData.findIndex(i => i === 0)
+    showStepDataList.value.push(autoMoveData.concat())
 
     switch (path[step]) {
       case 0: // 0要向上
+        if (zeroIndex - 4 < 0) break
         moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex - 4]), 2)
         swap(zeroIndex, zeroIndex - 4, autoMoveData)
         break
       case 1: // 0要向左
+        if (zeroIndex - 1 < 0) break
         moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex - 1]), 1)
         swap(zeroIndex, zeroIndex - 1, autoMoveData)
         break
       case 2: // 0要向右
+        if (zeroIndex + 1 > 15) break
         moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + 1]), 3)
         swap(zeroIndex, zeroIndex + 1, autoMoveData)
         break
       case 3: // 0要向下
+        if (zeroIndex + 4 > 15) break
         moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + 4]), 0)
         swap(zeroIndex, zeroIndex + 4, autoMoveData)
         break
     }
 
     step++
-    if (step === path.length) {
+    if (step > minLength) {
       path = []
       clearInterval(timer)
+      minLength = 0
+      isMin = false
     }
   }, 100)
 }
@@ -243,20 +252,30 @@ const autoMove = () => {
 
 <template>
   <div class="root">
-    <div style="display: flex; justify-content: center">
-      <div class="game-box">
-        <div class="number-block" v-for="item in data" :key="item" :id="'num' + item" @click="move(item)">
-          <div style="display: flex; align-items: center; justify-content: center; height: 100%">
-            <p style="font-size: 48px; color: #ffffff; user-select: none">{{ item }}</p>
+    <div style="width: 600px; float: left">
+      <div style="">
+        <div class="game-box">
+          <div class="number-block" v-for="item in data" :key="item" :id="'num' + item" @click="move(item)">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%">
+              <p style="font-size: 48px; color: #ffffff; user-select: none">{{ item }}</p>
+            </div>
           </div>
         </div>
       </div>
+
+      <div style="margin-top: 640px">
+        <button @click="restore">复原</button>
+        <button @click="shuffle" style="margin-left: 48px">随机</button>
+        <button @click="reset" style="margin-left: 48px">重置</button>
+      </div>
     </div>
 
-    <div style="margin-top: 640px">
-      <button @click="restore">复原</button>
-      <button @click="shuffle" style="margin-left: 48px">随机</button>
-      <button @click="reset" style="margin-left: 48px">重置</button>
+    <div style="width: 448px; float: left; padding: 24px; margin-left: 24px; ">
+      <p style="font-size: 24px; color: white; margin-top: 0">详细步骤</p>
+
+      <div id="step-board">
+        <StepBoard v-for="(i, idx) in showStepDataList" :key="i" id="example" :list="i" :index="idx + 1"/>
+      </div>
     </div>
   </div>
 </template>
@@ -285,7 +304,9 @@ export default {
   background: linear-gradient(to right, #4568DC, #B06AB3);
   margin-top: -8px;
   margin-left: -8px;
-  min-width: 900px;
+  min-width: 1200px;
+  display: flex;
+  justify-content: center;
 }
 
 .root::before {
