@@ -1,4 +1,4 @@
-# 15-digital-problems
+# 15-puzzle
 
 [![wakatime](https://wakatime.com/badge/user/490d4c04-1df9-407e-b68a-ef095e264a78/project/d1018355-8a0b-4eef-b122-43c4777ed3b9.svg)](https://wakatime.com/badge/user/490d4c04-1df9-407e-b68a-ef095e264a78/project/d1018355-8a0b-4eef-b122-43c4777ed3b9)
 
@@ -7,13 +7,13 @@
 ## 运行效果
 
 <p align="center">
-    <image src="./README.assets/animation-1.gif" alt="wakatime"></image>
+    <image src="./README.assets/animation-1.gif" alt="wakatime" width="40%"></image>
 </p>
 
 
 
 <p align="center">
-    <image src="./README.assets/animation-2.gif" alt="wakatime"></image>
+    <image src="./README.assets/animation-2.gif" alt="wakatime" width="90%"></image>
 </p>
 
 
