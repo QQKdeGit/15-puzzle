@@ -2,15 +2,24 @@
 import StepBoard from "@/components/StepBoard"
 import {ref} from "vue";
 
-const goal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0,]
-let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0,]
+// 目标
+const goal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
+
+// 当前棋盘的数据
+let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
+
+// 求解步骤
+let path = []
+
+// 用于自动复原的数组
 let autoMoveData = []
+
+// 用于展示详细步骤的数组
 const showStepDataList = ref([])
 
-let path = []
 let minLength = 0, maxLength
 let isMin = false
-let moveStep = [-4, -1, 1, 4]
+let moveStep = [-4, -1, 1, 4] // 上、左、右、下
 
 const swap = (i, j, list) => {
   let temp = list[i]
@@ -18,6 +27,11 @@ const swap = (i, j, list) => {
   list[j] = temp
 }
 
+/**
+ * 触发数字块移动的动画
+ * @param element 用于移动的数字块元素
+ * @param direction 移动方向，0123对应非0数字块的上右下左
+ */
 const moveAnimation = (element, direction) => {
   let zeroElement = document.getElementById('num0')
 
@@ -41,13 +55,17 @@ const moveAnimation = (element, direction) => {
   }
 }
 
-const move = (idx) => {
-  if (idx === 0) return
+/**
+ * 数字块移动
+ * @param id 需要移动的数字块的id
+ */
+const move = (id) => {
+  if (id === 0) return
 
   let zeroIndex = data.findIndex(i => i === 0)
-  let index = data.findIndex(i => i === idx)
+  let index = data.findIndex(i => i === id)
 
-  let element = document.getElementById('num' + idx)
+  let element = document.getElementById('num' + id)
 
   if (zeroIndex === index - 4) {
     moveAnimation(element, 0)
@@ -78,6 +96,9 @@ const win = () => {
   console.log('你赢了')
 }
 
+/**
+ * 随机打乱
+ */
 const shuffle = () => {
   let time = data.length
   while (time > 0) {
@@ -100,6 +121,9 @@ const shuffle = () => {
   })
 }
 
+/**
+ * 重置
+ */
 const reset = () => {
   data = goal.concat()
   showStepDataList.value = []
@@ -120,13 +144,16 @@ const reset = () => {
   }
 }
 
-const hasSolution = (a) => {
+/**
+ * 计算数组的逆序数，用于判断当前状态是否有解
+ */
+const hasSolution = (list) => {
   const zeroIndex = data.findIndex(i => i === 0)
   let inversion = 0
 
   for (let i = 0; i < 16; ++i) {
     for (let j = i + 1; j < 16; ++j) {
-      if (a[i] > a[j]) inversion++
+      if (list[i] > list[j]) inversion++
     }
   }
 
@@ -134,7 +161,10 @@ const hasSolution = (a) => {
   return inversion % 2
 }
 
-const evaluate = (a) => {
+/**
+ * 估价函数（计算当前状态的曼哈顿距离）
+ */
+const evaluate = () => {
   let cost = 0
 
   for (let i = 0; i < 16; ++i) {
@@ -149,9 +179,15 @@ const evaluate = (a) => {
   return cost
 }
 
+/**
+ * IDA*
+ * @param index 0数字块在数组中的索引
+ * @param len 移动长度
+ * @param lastMove 0数字块上一次的移动方向，对应moveStep里的上左右下
+ */
 const IDA_Star = (index, len, lastMove) => {
   if (isMin) return;
-  let cost = evaluate(data);
+  let cost = evaluate();
 
   if (len === maxLength) {
     if (cost === 0) {
@@ -176,7 +212,7 @@ const IDA_Star = (index, len, lastMove) => {
         && !(index % 4 === 3 && i === 2)) {
       swap(index, index + moveStep[i], data)
 
-      let newCost = evaluate(data);
+      let newCost = evaluate();
       if (newCost + len <= maxLength && !isMin) {
         path[len] = i;
         IDA_Star(index + moveStep[i], len + 1, i);
@@ -189,13 +225,16 @@ const IDA_Star = (index, len, lastMove) => {
   }
 }
 
+/**
+ * 复原
+ */
 const restore = () => {
   if (checkWin()) return
 
   if (hasSolution(data)) {
     autoMoveData = data.concat()
 
-    maxLength = evaluate(data);
+    maxLength = evaluate();
 
     while (!isMin && minLength <= 50) {
       IDA_Star(data.findIndex(i => i === 0), 0, 0);
@@ -209,6 +248,9 @@ const restore = () => {
     console.log('no answer')
 }
 
+/**
+ * 当计算完结果后触发的自动还原动画
+ */
 const autoMove = () => {
   showStepDataList.value = []
   let step = 0
@@ -253,12 +295,10 @@ const autoMove = () => {
 <template>
   <div class="root">
     <div style="width: 600px; float: left">
-      <div style="">
-        <div class="game-box">
-          <div class="number-block" v-for="item in data" :key="item" :id="'num' + item" @click="move(item)">
-            <div style="display: flex; align-items: center; justify-content: center; height: 100%">
-              <p style="font-size: 48px; color: #ffffff; user-select: none">{{ item }}</p>
-            </div>
+      <div class="game-box">
+        <div class="number-block" v-for="item in data" :key="item" :id="'num' + item" @click="move(item)">
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%">
+            <p style="font-size: 48px; color: #ffffff; user-select: none">{{ item }}</p>
           </div>
         </div>
       </div>
@@ -273,9 +313,7 @@ const autoMove = () => {
     <div style="width: 448px; float: left; padding: 24px; margin-left: 24px; ">
       <p style="font-size: 24px; color: white; margin-top: 0">详细步骤</p>
 
-      <div id="step-board">
-        <StepBoard v-for="(i, idx) in showStepDataList" :key="i" id="example" :list="i" :index="idx + 1"/>
-      </div>
+      <StepBoard v-for="(i, idx) in showStepDataList" :key="i" id="example" :list="i" :index="idx + 1"/>
     </div>
   </div>
 </template>
