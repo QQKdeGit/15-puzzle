@@ -7,8 +7,9 @@
 ## 运行效果
 
 <p align="center">
-    <image src="./README.assets/animation-1.gif" alt="animation-1" width="40%"></image>
+    <image src="./README.assets/animation-1.gif" alt="animation-1" width="80%"></image>
 </p>
+
 
 
 
@@ -23,6 +24,6 @@
 
 用 vue3 写的一个 15 数码问题求解网页，用的 IDA* 。
 
-总耗时 15h ，速通 lbj 围棋。
+总耗时 15h ，速通 lbj 围棋一。
 
 > 不能乱随机啊，很容易就跑不出来，浏览器就未响应了
