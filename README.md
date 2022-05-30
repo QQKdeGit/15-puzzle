@@ -7,8 +7,9 @@
 ## 运行效果
 
 <p align="center">
-    <image src="./README.assets/animation-1.gif" alt="animation-1" width="80%"></image>
+    <image src="./README.assets/animation-1.gif" alt="animation-1" width="40%"></image>
 </p>
+
 
 
 
