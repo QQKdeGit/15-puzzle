@@ -1,13 +1,13 @@
 <template>
   <div class="container">
     <div class="game-box">
-      <div :class="i !== 0 ? 'chess-block' : 'chess-block-zero'" v-for="(i, idx) in list" :key="i" :id="'chess' + (idx + 1)">
+      <div :class="['step-block', i === 0 ? 'step-block-zero' : '']" v-for="i in list" :key="i">
         <div style="display: flex; align-items: center; justify-content: center; height: 100%">
           <p style="font-size: 12px; color: #ffffff; user-select: none">{{ i }}</p>
         </div>
       </div>
 
-      <div style="margin-top: 80px">
+      <div style="margin-top: 108px">
         <p style="color: #ffffff; font-size: 16px; ">{{ index }}</p>
       </div>
     </div>
@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import {onMounted} from "vue";
+
 export default {
   name: "GameBoard",
   props: {
@@ -26,6 +28,43 @@ export default {
       type: Number,
       default: 0,
     }
+  },
+  setup(props) {
+    onMounted(() => {
+      for (let i = 0; i < 16; i++) {
+        let elem = document.getElementsByClassName('step-block')[i + (props.index - 1) * 16]
+
+        switch (Math.floor(i / 4)) {
+          case 0:
+            elem.style.top = '0'
+            break
+          case 1:
+            elem.style.top = '24px'
+            break
+          case 2:
+            elem.style.top = '48px'
+            break
+          case 3:
+            elem.style.top = '72px'
+            break
+        }
+
+        switch (i % 4) {
+          case 0:
+            elem.style.left = '0'
+            break
+          case 1:
+            elem.style.left = '24px'
+            break
+          case 2:
+            elem.style.left = '48px'
+            break
+          case 3:
+            elem.style.left = '72px'
+            break
+        }
+      }
+    })
   }
 }
 </script>
@@ -38,10 +77,7 @@ export default {
   display: inline-block;
   float: left;
 
-  animation-name: block-up;
-  animation-duration: 0.3s;
-  animation-iteration-count: 1;
-  animation-timing-function: linear;
+  animation: 0.3s linear 1 block-up;
 }
 
 @keyframes block-up {
@@ -60,7 +96,7 @@ export default {
   background: transparent;
 }
 
-.chess-block {
+.step-block {
   width: 20px;
   height: 20px;
   margin: 4px;
@@ -68,76 +104,16 @@ export default {
 
   transition: all 0.3s ease-in-out;
 
-  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   border-right: 1px solid rgba(255, 255, 255, 0.2);
-
   box-shadow: 0 5px 45px rgba(0, 0, 0, 0.1);
+
   overflow: hidden;
 }
 
-.chess-block-zero {
-  width: 20px;
-  height: 20px;
-  margin: 4px;
+.step-block-zero {
   opacity: 0;
-  z-index: -1;
-}
-
-#chess1,
-#chess2,
-#chess3,
-#chess4 {
-  top: 0;
-}
-
-#chess5,
-#chess6,
-#chess7,
-#chess8 {
-  top: 24px;
-}
-
-#chess9,
-#chess10,
-#chess11,
-#chess12 {
-  top: 48px;
-}
-
-#chess13,
-#chess14,
-#chess15,
-#chess16 {
-  top: 72px;
-}
-
-#chess1,
-#chess5,
-#chess9,
-#chess13 {
-  left: 0;
-}
-
-#chess2,
-#chess6,
-#chess10,
-#chess14 {
-  left: 24px;
-}
-
-#chess3,
-#chess7,
-#chess11,
-#chess15 {
-  left: 48px;
-}
-
-#chess4,
-#chess8,
-#chess12,
-#chess16 {
-  left: 72px;
 }
 </style>
