@@ -1,6 +1,6 @@
 <script setup>
 import StepBoard from "@/components/StepBoard"
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 
 // 目标
 const goal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
@@ -8,7 +8,7 @@ const goal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
 // 当前棋盘的数据
 let data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0]
 
-// 求解步骤
+// 求解步骤，注意是数字块0的移动方向
 let path = []
 
 // 用于自动复原的数组
@@ -19,8 +19,21 @@ const showStepDataList = ref([])
 
 let minLength = 0, maxLength
 let isMin = false
-let moveStep = [-4, -1, 1, 4] // 上、左、右、下
 
+// 移动方向
+const Directions = {
+  UP: -4,
+  LEFT: -1,
+  RIGHT: 1,
+  DOWN: 4,
+}
+
+/**
+ * 交换指定列表中的两个元素
+ * @param i 用于交换的第一个元素下标
+ * @param j 用于交换的第二个元素下标
+ * @param list 需要交换的列表
+ */
 const swap = (i, j, list) => {
   let temp = list[i]
   list[i] = list[j]
@@ -30,27 +43,27 @@ const swap = (i, j, list) => {
 /**
  * 触发数字块移动的动画
  * @param element 用于移动的数字块元素
- * @param direction 移动方向，0123对应非0数字块的上右下左
+ * @param direction 非0数字块的移动方向
  */
 const moveAnimation = (element, direction) => {
   let zeroElement = document.getElementById('num0')
 
   switch (direction) {
-    case 0: // 向上
+    case Directions.UP: // 向上
       element.style.top = (element.offsetTop - 120 - 48) + 'px'
       zeroElement.style.top = (zeroElement.offsetTop + 120) + 'px'
       break
-    case 1: // 向右
+    case Directions.LEFT: // 向左
+      element.style.left = (element.offsetLeft - 120 - 48) + 'px'
+      zeroElement.style.left = (zeroElement.offsetLeft + 120) + 'px'
+      break
+    case Directions.RIGHT: // 向右
       element.style.left = (element.offsetLeft + 120) + 'px'
       zeroElement.style.left = (zeroElement.offsetLeft - 120 - 48) + 'px'
       break
-    case 2: // 向下
+    case Directions.DOWN: // 向下
       element.style.top = (element.offsetTop + 120) + 'px'
       zeroElement.style.top = (zeroElement.offsetTop - 120 - 48) + 'px'
-      break
-    case 3: // 向左
-      element.style.left = (element.offsetLeft - 120 - 48) + 'px'
-      zeroElement.style.left = (zeroElement.offsetLeft + 120) + 'px'
       break
   }
 }
@@ -60,6 +73,7 @@ const moveAnimation = (element, direction) => {
  * @param id 需要移动的数字块的id
  */
 const move = (id) => {
+  // 数字块0不能移动
   if (id === 0) return
 
   let zeroIndex = data.findIndex(i => i === 0)
@@ -67,17 +81,17 @@ const move = (id) => {
 
   let element = document.getElementById('num' + id)
 
-  if (zeroIndex === index - 4) {
-    moveAnimation(element, 0)
+  if (zeroIndex === index + Directions.UP) {
+    moveAnimation(element, Directions.UP)
     swap(zeroIndex, index, data)
-  } else if (zeroIndex === index + 1 && index % 4 !== 3) {
-    moveAnimation(element, 1)
+  } else if (zeroIndex === index + Directions.LEFT && index % 4 !== 0) {
+    moveAnimation(element, Directions.LEFT)
     swap(zeroIndex, index, data)
-  } else if (zeroIndex === index + 4) {
-    moveAnimation(element, 2)
+  } else if (zeroIndex === index + Directions.RIGHT && index % 4 !== 3) {
+    moveAnimation(element, Directions.RIGHT)
     swap(zeroIndex, index, data)
-  } else if (zeroIndex === index - 1 && index % 4 !== 0) {
-    moveAnimation(element, 3)
+  } else if (zeroIndex === index + Directions.DOWN) {
+    moveAnimation(element, Directions.DOWN)
     swap(zeroIndex, index, data)
   }
 
@@ -96,9 +110,7 @@ const win = () => {
   console.log('你赢了')
 }
 
-/**
- * 随机打乱
- */
+// 随机打乱
 const shuffle = () => {
   let time = data.length
   while (time > 0) {
@@ -109,21 +121,19 @@ const shuffle = () => {
   data.forEach((i, idx) => {
     let element = document.getElementById('num' + i)
 
-    if (idx % 4 === 0) element.style.left = 0 + 'px'
-    else if (idx % 4 === 1) element.style.left = 144 + 'px'
-    else if (idx % 4 === 2) element.style.left = 288 + 'px'
-    else if (idx % 4 === 3) element.style.left = 432 + 'px'
+    if (idx % 4 === 0) element.style.left = '0'
+    else if (idx % 4 === 1) element.style.left = '144px'
+    else if (idx % 4 === 2) element.style.left = '288px'
+    else if (idx % 4 === 3) element.style.left = '432px'
 
-    if (idx <= 3) element.style.top = '0px'
+    if (idx <= 3) element.style.top = '0'
     else if (idx <= 7) element.style.top = '144px'
     else if (idx <= 11) element.style.top = '288px'
     else if (idx <= 15) element.style.top = '432px'
   })
 }
 
-/**
- * 重置
- */
+// 重置
 const reset = () => {
   data = goal.concat()
   showStepDataList.value = []
@@ -131,22 +141,21 @@ const reset = () => {
   for (let i = 0; i <= 15; ++i) {
     let element = document.getElementById('num' + i)
 
-    if (i % 4 === 1) element.style.left = 0 + 'px'
-    else if (i % 4 === 2) element.style.left = 144 + 'px'
-    else if (i % 4 === 3) element.style.left = 288 + 'px'
-    else if (i % 4 === 0) element.style.left = 432 + 'px'
+    if (i % 4 === 1) element.style.left = '0'
+    else if (i % 4 === 2) element.style.left = '144px'
+    else if (i % 4 === 3) element.style.left = '288px'
+    else if (i % 4 === 0) element.style.left = '432px'
 
     if (i === 0) element.style.top = '432px'
-    else if (i <= 4) element.style.top = '0px'
+    else if (i <= 4) element.style.top = '0'
     else if (i <= 8) element.style.top = '144px'
     else if (i <= 12) element.style.top = '288px'
     else if (i <= 15) element.style.top = '432px'
   }
 }
 
-/**
- * 计算数组的逆序数，用于判断当前状态是否有解
- */
+// 计算数组的逆序数，用于判断当前状态是否有解
+// 返回值为 1 则有解，为 0 则无解
 const hasSolution = (list) => {
   const zeroIndex = data.findIndex(i => i === 0)
   let inversion = 0
@@ -161,9 +170,7 @@ const hasSolution = (list) => {
   return inversion % 2
 }
 
-/**
- * 估价函数（计算当前状态的曼哈顿距离）
- */
+// 估价函数（计算当前状态的曼哈顿距离）
 const evaluate = () => {
   let cost = 0
 
@@ -181,64 +188,62 @@ const evaluate = () => {
 
 /**
  * IDA*
- * @param index 0数字块在数组中的索引
- * @param len 移动长度
- * @param lastMove 0数字块上一次的移动方向，对应moveStep里的上左右下
+ * @param zeroIndex 0数字块在数组中的索引
+ * @param length 移动长度
+ * @param lastMove 0数字块上一次的移动方向
  */
-const IDA_Star = (index, len, lastMove) => {
-  if (isMin) return;
-  let cost = evaluate();
+const IDA_Star = (zeroIndex, length, lastMove) => {
+  if (isMin) return
+  let cost = evaluate()
 
-  if (len === maxLength) {
+  if (length === maxLength) {
     if (cost === 0) {
-      isMin = true;
-      minLength = len;
+      isMin = true
+      minLength = length
     }
-    return;
-  } else if (len < maxLength) {
+    return
+  } else if (length < maxLength) {
     if (cost === 0) {
-      isMin = true;
-      minLength = len;
-      return;
+      isMin = true
+      minLength = length
+      return
     }
   }
 
-  for (let i = 0; i < 4; ++i) {
-    if (i + lastMove === 3 && len > 0) continue;
+  for (let i in Directions) {
+    if (Directions[i] + lastMove === 0 && length > 0) continue
 
-    if (index + moveStep[i] >= 0
-        && index + moveStep[i] <= 15
-        && !(index % 4 === 0 && i === 1)
-        && !(index % 4 === 3 && i === 2)) {
-      swap(index, index + moveStep[i], data)
+    if (zeroIndex + Directions[i] >= 0
+        && zeroIndex + Directions[i] <= 15
+        && !(zeroIndex % 4 === 0 && Directions[i] === Directions.LEFT)
+        && !(zeroIndex % 4 === 3 && Directions[i] === Directions.RIGHT)) {
+      swap(zeroIndex, zeroIndex + Directions[i], data)
 
       let newCost = evaluate();
-      if (newCost + len <= maxLength && !isMin) {
-        path[len] = i;
-        IDA_Star(index + moveStep[i], len + 1, i);
+      if (newCost + length <= maxLength && !isMin) {
+        path[length] = Directions[i]
+        IDA_Star(zeroIndex + Directions[i], length + 1, Directions[i])
 
-        if (isMin) return;
+        if (isMin) return
       }
 
-      swap(index, index + moveStep[i], data)
+      swap(zeroIndex, zeroIndex + Directions[i], data)
     }
   }
 }
 
-/**
- * 复原
- */
+// 复原
 const restore = () => {
   if (checkWin()) return
 
   if (hasSolution(data)) {
     autoMoveData = data.concat()
 
-    maxLength = evaluate();
+    maxLength = evaluate()
 
     while (!isMin && minLength <= 50) {
-      IDA_Star(data.findIndex(i => i === 0), 0, 0);
-      if (!isMin) maxLength++;
+      IDA_Star(data.findIndex(i => i === 0), 0, 0)
+      if (!isMin) maxLength++
     }
 
     if (isMin) {
@@ -248,9 +253,7 @@ const restore = () => {
     console.log('no answer')
 }
 
-/**
- * 当计算完结果后触发的自动还原动画
- */
+// 当计算完结果后触发的自动还原动画
 const autoMove = () => {
   showStepDataList.value = []
   let step = 0
@@ -258,38 +261,56 @@ const autoMove = () => {
     let zeroIndex = autoMoveData.findIndex(i => i === 0)
     showStepDataList.value.push(autoMoveData.concat())
 
-    switch (path[step]) {
-      case 0: // 0要向上
-        if (zeroIndex - 4 < 0) break
-        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex - 4]), 2)
-        swap(zeroIndex, zeroIndex - 4, autoMoveData)
-        break
-      case 1: // 0要向左
-        if (zeroIndex - 1 < 0) break
-        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex - 1]), 1)
-        swap(zeroIndex, zeroIndex - 1, autoMoveData)
-        break
-      case 2: // 0要向右
-        if (zeroIndex + 1 > 15) break
-        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + 1]), 3)
-        swap(zeroIndex, zeroIndex + 1, autoMoveData)
-        break
-      case 3: // 0要向下
-        if (zeroIndex + 4 > 15) break
-        moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + 4]), 0)
-        swap(zeroIndex, zeroIndex + 4, autoMoveData)
-        break
+    if (zeroIndex + path[step] >= 0 && zeroIndex + path[step] <= 15) {
+      moveAnimation(document.getElementById('num' + autoMoveData[zeroIndex + path[step]]), -path[step])
+      swap(zeroIndex, zeroIndex + path[step], autoMoveData)
     }
 
     step++
     if (step > minLength) {
-      path = []
       clearInterval(timer)
+      path = []
       minLength = 0
       isMin = false
     }
   }, 100)
 }
+
+onMounted(() => {
+  data.forEach((i, idx) => {
+    let elem = document.getElementById('num' + i)
+
+    switch (Math.floor(idx / 4)) {
+      case 0:
+        elem.style.top = '0'
+        break
+      case 1:
+        elem.style.top = '144px'
+        break
+      case 2:
+        elem.style.top = '288px'
+        break
+      case 3:
+        elem.style.top = '432px'
+        break
+    }
+
+    switch (idx % 4) {
+      case 0:
+        elem.style.left = '0'
+        break
+      case 1:
+        elem.style.left = '144px'
+        break
+      case 2:
+        elem.style.left = '288px'
+        break
+      case 3:
+        elem.style.left = '432px'
+        break
+    }
+  })
+})
 </script>
 
 <template>
@@ -313,7 +334,7 @@ const autoMove = () => {
     <div style="width: 448px; float: left; padding: 24px; margin-left: 24px; ">
       <p style="font-size: 24px; color: white; margin-top: 0">详细步骤</p>
 
-      <StepBoard v-for="(i, idx) in showStepDataList" :key="i" id="example" :list="i" :index="idx + 1"/>
+      <StepBoard v-for="(i, idx) in showStepDataList" :key="i" :list="i" :index="idx"/>
     </div>
   </div>
 </template>
@@ -332,7 +353,6 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
 }
 
 .root {
@@ -416,62 +436,6 @@ button:hover {
 
 button:active {
   background: rgba(255, 255, 255, 0.4);
-}
-
-#num1,
-#num2,
-#num3,
-#num4 {
-  top: 0;
-}
-
-#num5,
-#num6,
-#num7,
-#num8 {
-  top: 144px;
-}
-
-#num9,
-#num10,
-#num11,
-#num12 {
-  top: 288px;
-}
-
-#num13,
-#num14,
-#num15,
-#num0 {
-  top: 432px;
-}
-
-#num1,
-#num5,
-#num9,
-#num13 {
-  left: 0;
-}
-
-#num2,
-#num6,
-#num10,
-#num14 {
-  left: 144px;
-}
-
-#num3,
-#num7,
-#num11,
-#num15 {
-  left: 288px;
-}
-
-#num4,
-#num8,
-#num12,
-#num0 {
-  left: 432px;
 }
 
 #num0 {

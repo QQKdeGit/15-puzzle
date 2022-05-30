@@ -8,7 +8,7 @@
       </div>
 
       <div style="margin-top: 108px">
-        <p style="color: #ffffff; font-size: 16px; ">{{ index }}</p>
+        <p style="color: #ffffff; font-size: 16px; ">{{ index !== 0 ? index : '初始' }}</p>
       </div>
     </div>
   </div>
@@ -18,7 +18,7 @@
 import {onMounted} from "vue";
 
 export default {
-  name: "GameBoard",
+  name: "StepBoard",
   props: {
     list: {
       type: Array,
@@ -32,7 +32,7 @@ export default {
   setup(props) {
     onMounted(() => {
       for (let i = 0; i < 16; i++) {
-        let elem = document.getElementsByClassName('step-block')[i + (props.index - 1) * 16]
+        let elem = document.getElementsByClassName('step-block')[i + props.index * 16]
 
         switch (Math.floor(i / 4)) {
           case 0:
@@ -73,7 +73,7 @@ export default {
 .container {
   width: 100px;
   height: 120px;
-  margin: 6px;
+  margin: 0 6px 24px;
   display: inline-block;
   float: left;
 
