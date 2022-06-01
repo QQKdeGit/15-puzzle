@@ -332,7 +332,7 @@ onMounted(() => {
     </div>
 
     <div style="width: 448px; float: left; padding: 24px; margin-left: 24px; ">
-      <p style="font-size: 24px; color: white; margin-top: 0">详细步骤</p>
+      <p style="font-size: 24px; color: white; margin-bottom: 24px">详细步骤</p>
 
       <StepBoard v-for="(i, idx) in showStepDataList" :key="i" :list="i" :index="idx"/>
     </div>
@@ -355,16 +355,19 @@ export default {
   text-align: center;
 }
 
+* {
+  margin: 0;
+}
+
 .root {
   position: absolute;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(to right, #4568DC, #B06AB3);
-  margin-top: -8px;
-  margin-left: -8px;
   min-width: 1200px;
   display: flex;
   justify-content: center;
+  overflow-x: hidden;
 }
 
 .root::before {
