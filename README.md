@@ -7,16 +7,13 @@
 ## Gameplay
 
 <p align="center">
-    <image src="./README.assets/animation-1.gif" alt="animation-1" width="80%"></image>
+    <image src="./README.assets/animation-1.gif" alt="animation-1" width="100%"></image>
 </p>
-
-
-
-
 
 <p align="center">
-    <image src="./README.assets/animation-2.gif" alt="animation-2" width="90%"></image>
+    <image src="./README.assets/animation-2.gif" alt="animation-2" width="100%"></image>
 </p>
+
 
 
 ## Getting Started
